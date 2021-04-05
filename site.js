@@ -2,42 +2,32 @@
 
 const selectors = {
     canvas: '#canvas',
-    containerFile: '[el="base-container-file"]',
-    itemFile: '[el="base-item-file"]',
-    containerNum: '[el="base-container"]',
-    itemNum: '[el="base-item"]',
+    baseFile: '[el="base-container-file"]',
+    decimalFile: '[el="base-item-file"]',
+    baseNum: '[el="base-container"]',
+    decimalNum: '[el="base-item"]',
     submitBtn: '#submit'
 }
 
 
 
 class ArmyCreator {
-    constructor({ canvasSel, containerFile, itemFile, containerNum, itemNum, btn }) {
-        this.canvas = document.querySelector(canvasSel)
-        this.canvas.width = document.body.clientWidth
-        this.canvas.height = document.body.clientHeight
- 
-        this.containerEl = document.querySelector(containerFile)
-        this.itemEl = document.querySelector(itemFile)
-        this.countParentEl = document.querySelector(containerNum)
-        this.countItemEl = document.querySelector(itemNum)
-        this.submitBtn = document.querySelector(btn)
-        this.containerImgEl
-        this.itemImgEl
-        this.containerNum = 0
-        this.itemNum = 0
-        this.context = this.canvas.getContext('2d')
-        this.init()
+    constructor({ base, decimal, baseFile, decimalFile, context, canvas }) {
+        this.base = base
+        this.baseFile = baseFile
+        this.decimal = decimal
+        this.decimalFile = decimalFile
+        this.context = context
+        this.canvas = canvas
     }
 
-    init() {
-        this._attachEvents()
+    run() {
+        this._buildArmy()
     }
 
     _readImg(imgSource) {
         const fr = new FileReader()
         fr.readAsDataURL(imgSource)
-
         return new Promise((res, rej) => {
             fr.addEventListener('loadend', (evt) => {
                 res(fr.result)
@@ -45,19 +35,16 @@ class ArmyCreator {
         }) 
     }
 
-
-
-
     async _buildArmy() {
-        const imgBase64 = await this._readImg(this.containerImgEl)
-        const imgKnights = await this._readImg(this.itemImgEl)
+        const baseImg = await this._readImg(this.baseFile)
+        const decimalImg = await this._readImg(this.decimalFile)
 
-        const totalLevel = this._countBaseConversionStep(this.itemNum, this.containerNum)
+        const totalLevel = this._countBaseConversionStep(this.decimal, this.base)
 
         const boats = []
         const coordinates = this._getCanvasCoordinates(this.canvas)
         
-        let width = coordinates.width / this.containerNum
+        let width = coordinates.width / this.base
         let height =  coordinates.height / totalLevel
 
         let bin = 0
@@ -66,19 +53,17 @@ class ArmyCreator {
             boats.push(
                 new BoatLevel({
                     context: this.context,
-                    knightsNum: this._getQuotient(this.itemNum, 16, i),
+                    knightsNum: this._getQuotient(this.decimal, this.base, i),
                     level: i,
                     width: width,
                     height: height,
                     dy: (height / totalLevel) * i,
-                    imgUrl: imgBase64,
-                    imgKnight: imgKnights
+                    imgUrl: baseImg,
+                    imgKnight: decimalImg
                 })
             )
             bin++
         }
-
-        console.log(boats)
     }
 
     _getQuotient(num, base,  step) {
@@ -90,9 +75,6 @@ class ArmyCreator {
         return quotient
     }
 
-    _getLevelQuotient(num, level) {
-
-    }
 
     _countBaseConversionStep(num, base, step) {
         const quotient = Math.floor(num  / base)
@@ -100,19 +82,6 @@ class ArmyCreator {
         if (!step) step = 0
         if (quotient == 0)  return step + 0
         return this._countBaseConversionStep(quotient, base, step + 1)
-    }
-
-    _attachEvents() {
-       
-        
-        this.submitBtn.addEventListener('click', () => {
-            this.containerNum = parseInt(this.countParentEl.value)
-            this.itemNum = parseInt(this.countItemEl.value)
-            this.containerImgEl = this.containerEl.files[0]
-            this.itemImgEl = this.itemEl.files[0]
-
-            this._buildArmy()
-        })
     }
 
     _getCanvasCoordinates(el) {
@@ -157,9 +126,6 @@ class BoatLevel {
 
 
 
-class FigureRenderer {
-
-}
 
 class Boat {
 
@@ -176,26 +142,49 @@ class Boat {
 
         this.context = context
     
-        this.renderBoat()
-        this.renderKnights()
+        this.drawBoat()
+        this.addKnightsToBoat()
+        this.drawKnight()
     }
 
 
-    renderBoat() {
+    drawBoat() {
         const img = new Image()
         img.src = this.imageUrl
         img.addEventListener('load', () => {
-            this.context.drawImage(img, this.dx, this.dy, this.width, this.height)
+            this.context.drawImage(img, this.dx, this.dy, this.width, 100 *  img.height / img.width)
         })
     }
 
-    renderKnights() {
+
+    drawKnight() {
+        this.knights.forEach(knight => {
+            const img = new Image()
+            img.src = knight.img
+            img.addEventListener('load', () => {
+                const width = this.width / this.knights.length
+                const height = 100* img.height / img.width
+                this.context.drawImage(img, knight.dx, knight.dy, 50, height)
+            })
+        })
+       
+    }
+
+    addKnightsToBoat() {
         let count = this.knightsNum
 
         for (let i = 0; i < count; i++) {
-            this.knights.push(new Knight({parent: this, dx: 123, dy: 332, img: this.imgKnight }))
+            const positionX = this.dx + (this.width / count) * i
+            const positionY = this.dy
+            this.knights.push(new Knight({
+                parent: this,
+                dx: positionX,
+                dy: positionY,
+                img: this.imgKnight
+            }))
         }
     }
+
     
 }
 
@@ -212,13 +201,35 @@ class Knight {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    new ArmyCreator({
-        canvasSel: selectors.canvas,
-        containerFile: selectors.containerFile,
-        itemFile: selectors.itemFile,
-        containerNum: selectors.containerNum,
-        itemNum: selectors.itemNum,
-        btn: selectors.submitBtn
-    });
+
+    const canvas = document.querySelector(selectors.canvas)
+    canvas.width = document.body.clientWidth
+    canvas.height = document.body.clientHeight
+    const context = canvas.getContext('2d')
+
+    
+    const baseFileEl = document.querySelector(selectors.baseFile)
+    const baseNumEl = document.querySelector(selectors.baseNum)
+
+    const decimalFileEl = document.querySelector(selectors.decimalFile)
+    const decimalNumEl = document.querySelector(selectors.decimalNum)
+
+
+    const submitBtn = document.querySelector(selectors.submitBtn)
+    submitBtn.addEventListener('click', () => {
+        const army = new ArmyCreator({
+            base: Math.floor(parseInt(baseNumEl.value)),
+            baseFile: baseFileEl.files[0],
+            decimal: Math.floor(parseInt(decimalNumEl.value)),
+            decimalFile: decimalFileEl.files[0],
+            context: context,
+            canvas: canvas
+        })
+
+
+        army.run()
+    })
+ 
+   
 })
 
