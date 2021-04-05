@@ -92,111 +92,67 @@ class ArmyCreator {
 
 
 class BoatLevel {
-    constructor({context, knightsNum, level, width, height, dy, imgUrl, imgKnight}) {
-        this.boats = []
-        this.context = context
-        this.knightsNum = knightsNum
+    constructor({level, width, dy, imgUrl}) {
+        this.figurines = []
         this.level = level
         this.width = width
-        this.height = height
         this.dyStart = dy
         this.imgUrl = imgUrl
-        this.imgKnight = imgKnight
-
-        this.createBoatLevel()
     }
 
-    createBoatLevel() { 
-        for (let i = 0; i < 16; i++) {
-            this.boats.push(new Boat({
-                context: this.context,
-                knights: this.knightsNum,
-                dx: this.width * i,
-                dy: this.dyStart,
-                width: this.width,
-                height: this.height,
-                imageUrl: this.imgUrl,
-                imgKnight: this.imgKnight
-            }))
-        }
+    addFigurine(figurine) {
+        this.figurines.push(figurine)
     }
 
-
+    // drawFigurineOnCanvas() {
+    //     for (let i = 0; i < 16; i++) {
+    //         this.boats.push(new Boat({
+    //             dx: this.width * i,
+    //             dy: this.dyStart,
+    //             width: this.width,
+    //             height: this.height,
+    //             imageUrl: this.imgUrl,
+    //             imgKnight: this.imgKnight
+    //         }))
+    //     }
+    // }
 }
 
 
-
-
-class Boat {
-
-    constructor({ context, knights, dx, dy, width, height, imageUrl, imgKnight }) {
-
-        this.knights = []
-        this.knightsNum = knights
+class Figurine {
+    constructor({dx, dy, width, img}) {
         this.dx = dx
         this.dy = dy
         this.width = width
-        this.height = height
-        this.imageUrl = imageUrl
-        this.imgKnight = imgKnight
-
-        this.context = context
-    
-        this.drawBoat()
-        this.addKnightsToBoat()
-        this.drawKnight()
-    }
-
-
-    drawBoat() {
-        const img = new Image()
-        img.src = this.imageUrl
-        img.addEventListener('load', () => {
-            this.context.drawImage(img, this.dx, this.dy, this.width, 100 *  img.height / img.width)
-        })
-    }
-
-
-    drawKnight() {
-        this.knights.forEach(knight => {
-            const img = new Image()
-            img.src = knight.img
-            img.addEventListener('load', () => {
-                const width = this.width / this.knights.length
-                const height = 100* img.height / img.width
-                this.context.drawImage(img, knight.dx, knight.dy, 50, height)
-            })
-        })
-       
-    }
-
-    addKnightsToBoat() {
-        let count = this.knightsNum
-
-        for (let i = 0; i < count; i++) {
-            const positionX = this.dx + (this.width / count) * i
-            const positionY = this.dy
-            this.knights.push(new Knight({
-                parent: this,
-                dx: positionX,
-                dy: positionY,
-                img: this.imgKnight
-            }))
-        }
-    }
-
-    
-}
-
-class Knight {
-    constructor({ parent, dx, dy, img }) {
-        this.parent = parent
-        this.dx = dx
-        this.dy = dy
         this.img = img
     }
 
-    
+    drawFigure(context) {
+        const img = new Image()
+        img.src = this.img
+        img.addEventListener('load', () => {
+            const height = 100 *  img.height / img.width
+            context.drawImage(img, this.dx, this.dy, this.width, height )
+        })
+    }
+}
+
+class Boat extends Figurine {
+    constructor({ dx, dy, width, img }) {
+        super({dx, dy, width, img})
+        this.knights = []
+    }
+
+    addFigurine(figurine) {
+        this.knights.push(figurine)
+    }
+}
+
+class Knight extends Figurine {
+    constructor({dx, dy, img,  parent }) {
+        super(dx, dy, width, img)
+        this.parent = parent
+    }
 }
 
 
