@@ -9,7 +9,7 @@ const selectors = {
     submitBtn: '#submit'
 }
 
-
+//
 
 class ArmyCreator {
     constructor({ base, decimal, baseFile, decimalFile, context, canvas }) {
@@ -41,7 +41,6 @@ class ArmyCreator {
 
         const totalLevel = this._countBaseConversionStep(this.decimal, this.base)
 
-        const boats = []
         const coordinates = this._getCanvasCoordinates(this.canvas)
         
         let width = coordinates.width / this.base
@@ -50,8 +49,7 @@ class ArmyCreator {
         let bin = 0
 
         for (let i = 0; i < totalLevel; i++) {
-            boats.push(
-                new BoatLevel({
+                new Level({
                     context: this.context,
                     knightsNum: this._getQuotient(this.decimal, this.base, i),
                     level: i,
@@ -61,13 +59,11 @@ class ArmyCreator {
                     imgUrl: baseImg,
                     imgKnight: decimalImg
                 })
-            )
             bin++
         }
     }
 
     _getQuotient(num, base,  step) {
-
         let quotient = Math.floor(num / base);
         for (let i = 0; i < step; i++) {
             quotient = Math.floor(quotient / base)
@@ -91,7 +87,7 @@ class ArmyCreator {
 }
 
 
-class BoatLevel {
+class Level {
     constructor({level, width, dy, imgUrl}) {
         this.figurines = []
         this.level = level
@@ -100,22 +96,10 @@ class BoatLevel {
         this.imgUrl = imgUrl
     }
 
-    addFigurine(figurine) {
+    addContainer(container) {
         this.figurines.push(figurine)
     }
 
-    // drawFigurineOnCanvas() {
-    //     for (let i = 0; i < 16; i++) {
-    //         this.boats.push(new Boat({
-    //             dx: this.width * i,
-    //             dy: this.dyStart,
-    //             width: this.width,
-    //             height: this.height,
-    //             imageUrl: this.imgUrl,
-    //             imgKnight: this.imgKnight
-    //         }))
-    //     }
-    // }
 }
 
 
